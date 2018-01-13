@@ -1,0 +1,67 @@
+# Ce qui a été fait pour en arriver là...
+# Avec Etcher, copier un Raspbian Lite sur une carte SD, et sur un disque dur
+# Sur la partition boot (FAT32) de la carte SD :
+#		faire "touch ssh" pour lui dire de démarrer le serveur ssh
+#		créer un fichier wpa_supplicant.conf avec les infos du réseau wifi
+#		ajouter dans config.txt la ligne program_usb_boot_mode=1
+#		ajouter à la fin de cmdline.txt rootdelay=10 pour se donner 10 secondes
+# Démarrer avec simplement la carte SD dans le Raspberry Pi
+# (optionnel : démarrer en utilisant juste la partition boot sur la carte)
+# 	brancher le disque dur dans le raspberry, attendre qu'il le détecte et faire "sudo blkid" pour récupérer les PARTUUID
+#	modifier le fichier /boot/cmdline.txt pour remplacer le PARTUUID par celui de la partition ext4 du disque dur
+#	modifier le fichier /etc/fstab (SUR LE DISQUE DUR) pour lui donner le PARTUUID de la partition à monter sur /boot
+#	enregistrer tout (sync) et arreter le raspberry (sudo shutdown)
+#	au démarrage, il ne doit plus utiliser la partition système (root) de la carte SD, mais celle du disque dur
+#	on peut vérifier par "mount" pour voir quelle partition est où
+# (optionnel : pour se passer de carte SD)
+#	modifier le fichier /boot/cmdline.txt DU DISQUE DUR pour rajouter rootdelay=10 pour se donner le temps de démarrer
+#	dans la partition /boot du DISQUE DUR faire "touch ssh" et mettre le wpa_supplicant.conf qui va bien
+#	modifier le fichier /etc/fstab DU DISQUE DUR pour ajouter ou vérifier les PARTUUID des montages de / et /boot 
+#	enregistrer tout (sync) et arreter le raspberry (sudo shutdown), enlever la carte SD et redémarrer
+# une fois le système en place :
+# sudo apt-get update ; sudo apt-get dist-upgrade -y
+# (pour mettre le système à jour)
+##############
+# Option : serveur web dans docker
+#############
+# curl -fsSL get.docker.com -o get-docker.sh
+# sudo sh get-docker.sh
+# sudo adduser pi docker
+# (pour installer un docker récent et que le user pi fasse partie du groupe docker)
+# sudo mkdir /var/www && sudo mkdir /var/www/html && sudo chown -R www-data:www-data /var/www && sudo mkdir /var/log/apache2 && sudo chown -R www-data:www-data /var/log/apache2
+# se déconnecter et se reconnecter (pour que l'appartenance au groupe docker soit prise en compte)
+# cd 
+# wget https://github.com/hmag/docker/archive/master.zip
+# unzip master.zip
+# rm master.zip
+# mv docker-master docker
+# cd docker/hmalpine/Build
+# (la "machine virtuelle" faisant serveur web est maintenant créée)
+# cd ..
+# ./run_hmalpine.sh
+# la machine virtuelle est maintenant lancée, et elle se lancera au démarrage du raspberry
+#############
+# Option : server web en direct
+#############
+sudo apt-get install -y apache2 php7.0-xml php7.0-cgi php7.0-mbstring php7.0-gd php7.0-curl php7.0-zip php7.0-sqlite3
+sudo apt-get install -y php7.0-mcrypt php7.0-soap php7.0-bz2 php7.0-intl php-smbclient php7.0-gmp php-apcu php-memcached php-imagick libapache2-mod-php7.0
+# Ajouter dans le fichier /etc/apache2/sites-available/000-default :
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride All
+                Require all granted
+        </Directory>
+        <Directory /var/www/html/ >
+                Options FollowSymLinks
+                AllowOverride All
+                Require all granted
+        </Directory>
+# et faire "sudo service apache2 reload " pour recharger la config
+#############
+# Installer NextCloud
+############
+cd /var/www/html
+sudo -u www-data wget https://download.nextcloud.com/server/releases/nextcloud-12.0.4.zip
+sudo -u www-data unzip nextcloud-12.0.4.zip
+sudo -u www-data rm nextcloud-12.0.4.zip 
+# Ensuite se connecter sur http://ipduraspberry/nextcloud
