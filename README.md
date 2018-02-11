@@ -21,4 +21,4 @@ Dans le cas général, quelques infos sont précisées en début de script pour 
     * utilise imagemagick (convert)
     * compresse les images fournies dans la liste (nouveau fichier avec le mot "réduit")
     * est appelé par Thunar lors d'un clic droit sur une liste d'images jpg
-    
+ * colors.sh : utilisation des couleurs pour la commande echo   
