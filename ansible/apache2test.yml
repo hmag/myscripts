@@ -1,0 +1,76 @@
+---
+- hosts: all
+
+  tasks:
+  - name: Installation des applications
+    apt:
+      update_cache: yes
+      state: latest
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - ntp
+      - acl
+      - rsync
+      - ncdu
+      - vim
+      - dnsutils
+      - apache2
+      - libapache2-mod-php
+      - php-gd
+      - php-json
+      - php-mysql
+      - php-curl
+      - php-mbstring
+      - php-intl
+      - php-mcrypt
+      - php-imagick
+      - php-xml
+      - php-zip
+      - php-sqlite3
+      - sqlite3
+  # Package acl nécessaire pour pouvoir utiliser become_user facilement ...
+  - name: set timezone to Europe/Paris
+    timezone:
+      name: Europe/Paris
+  # Ajout de johe dans le groupe adm pour pouvoir voir les logs
+  - name: Ajouter le user johe dans le groupe adm
+    user:
+      name: johe
+      group: adm
+  # Ajout d'un virtual host : copie du fichier
+  - name: Créer le répertoire /var/www/testansible
+    file:
+      path:  /var/www/testansible
+      owner: www-data
+      group: www-data
+      state: directory
+  - name: Copie du fichier VirtualHost www.testansible.com.conf
+    copy:
+      src: www.testansible.com.conf
+      dest: /etc/apache2/sites-available/
+      owner: root
+    notify: reload_apache2
+  - name: Activer le site www.testansible.com si nécessaire
+    command: a2ensite www.testansible.com
+    args:
+      creates: /etc/apache2/sites-enabled/www.testansible.com.conf
+  - name: copie de la page d'accueil générale
+    copy:
+      src: generic.index.html
+      dest: /var/www/html/index.html
+      owner: www-data
+      group: www-data
+  - name: copie de la page d'accueil dédiée
+    copy:
+      src: testansible.index.html
+      dest: /var/www/testansible/index.html
+      owner: www-data
+      group: www-data
+
+  handlers:
+  - name: reload_apache2
+    systemd:
+      name: apache2
+      state: reloaded
+
